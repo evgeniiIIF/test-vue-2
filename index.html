@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue lesson 4</title>
+    <link rel="stylesheet" href="./fontawesome-free-6.2.1-web/css/fontawesome.min.css" />
+    <link rel="stylesheet" href="./fontawesome-free-6.2.1-web/css/all.min.css" />
+    <style>
+      .sample {
+        width: 50%;
+        margin: 0 auto;
+      }
+      input {
+        width: 100%;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        margin: 20px 0;
+      }
+      .progress {
+        height: 20px;
+        background: green;
+      }
+      .fa-regular.fa-circle-check {
+        color: green;
+      }
+      .fa-regular.fa-circle-xmark {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="sample">
+        <div class="progress" :style="progressWidth"></div>
+        <form action="#">
+          <app-input v-for="(item, index) in info" :name="item.name" :value="item.value" :pattern="item.pattern" @on-change-value="onChangeValue(index, $event)" @on-init="onInitValid(index, $event)"></app-input>
+        </form>
+      </div>
+    </div>
+    <script src="./vue-2.js"></script>
+    <script>
+      Vue.component("appInput", {
+        props: ["name", "value", "pattern"],
+        template: `
+          <label>
+              {{name}}
+              <i v-if='isActive' :class='validClass' ></i>
+              <input type="text" :value='value' @input='onInput'>
+          </label>
+        `,
+        data() {
+          return {
+            isActive: this.value != "",
+          };
+        },
+        computed: {
+          validClass() {
+            this.init();
+            return this.pattern.test(this.value) ? "fa-regular fa-circle-check" : "fa-regular fa-circle-xmark";
+          },
+        },
+        methods: {
+          onInput(e) {
+            this.isActive = true;
+            this.$emit("on-change-value", {
+              value: e.target.value,
+              isValid: this.pattern.test(e.target.value),
+            });
+            console.log(this.value, e.target.value);
+          },
+          init() {
+            this.$emit("on-init", {
+              validField: this.pattern.test(this.value),
+            });
+          },
+        },
+      });
+
+      new Vue({
+        el: ".sample",
+        data: {
+          info: [
+            {
+              name: "Name",
+              value: "Ok",
+              pattern: /^[a-zA-Z]{2,30}$/,
+            },
+            {
+              name: "Phone",
+              value: "",
+              pattern: /^[0-9]{7,14}$/,
+            },
+            {
+              name: "Email",
+              value: "",
+              pattern: /.+/,
+            },
+            {
+              name: "Some Field 1",
+              value: "",
+              pattern: /.+/,
+            },
+            {
+              name: "Name",
+              value: "",
+              pattern: /.+/,
+            },
+          ],
+          controls: [],
+          done: 0,
+        },
+        methods: {
+          onInit() {
+            let done = 0;
+            for (let i = 0; i < this.info.length; i++) {
+              if (this.info[i].pattern.test(this.info[i].value)) {
+                done++;
+              }
+              this.done = done;
+            }
+          },
+          onChangeValue(index, data) {
+            this.info[index].value = data.value;
+            this.controls[index] = data.isValid;
+
+            let done = 0;
+            for (let i = 0; i < this.controls.length; i++) {
+              if (this.controls[i]) {
+                done++;
+              }
+              this.done = done;
+            }
+          },
+          onInitValid(index, data) {
+            this.controls[index] = data.validField;
+            console.log("onIniV");
+            let done = 0;
+            for (let i = 0; i < this.controls.length; i++) {
+              if (this.controls[i]) {
+                done++;
+              }
+              this.done = done;
+            }
+          },
+        },
+        beforeMount() {
+          for (let i = 0; i < this.info.length; i++) {
+            this.controls.push(false);
+          }
+        },
+        computed: {
+          progressWidth() {
+            return { width: (this.done / this.info.length) * 100 + "%" };
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
